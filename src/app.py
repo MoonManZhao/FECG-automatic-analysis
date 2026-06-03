@@ -333,9 +333,22 @@ class MainWindow(QtWidgets.QMainWindow):
         hrv_layout.addWidget(self.hrv_table, 1)
         side_splitter.addWidget(hrv_container)
 
-        self.wave_stats_table = QtWidgets.QTableWidget(0, 9)
+        self.wave_stats_table = QtWidgets.QTableWidget(0, 12)
         self.wave_stats_table.setHorizontalHeaderLabels(
-            ["导联", "P (ms)", "PR (ms)", "QRS (ms)", "ST (ms)", "T (ms)", "RR (ms)", "58%RR (ms)", "心拍数"]
+            [
+                "导联",
+                "P (ms)",
+                "P幅度 (mV)",
+                "PR (ms)",
+                "QRS (ms)",
+                "QRS幅度 (mV)",
+                "ST (ms)",
+                "T (ms)",
+                "T幅度 (mV)",
+                "RR (ms)",
+                "58%RR (ms)",
+                "心拍数",
+            ]
         )
         self.wave_stats_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         wave_container = QtWidgets.QWidget()
@@ -375,22 +388,19 @@ class MainWindow(QtWidgets.QMainWindow):
         annotation_layout.addWidget(self.annotation_table, 1)
 
         # Joint analysis table
-        self.joint_table = QtWidgets.QTableWidget(0, 14)
+        self.joint_table = QtWidgets.QTableWidget(0, 11)
         self.joint_table.setHorizontalHeaderLabels(
             [
                 "来源",
                 "心拍",
-                "P起(s)",
-                "P终(s)",
-                "QRS起(s)",
-                "QRS终(s)",
-                "T起(s)",
-                "T终(s)",
                 "P(ms)",
+                "P幅度(mV)",
                 "PR(ms)",
                 "QRS(ms)",
+                "QRS幅度(mV)",
                 "ST(ms)",
                 "T(ms)",
+                "T幅度(mV)",
                 "RR(ms)",
             ]
         )
@@ -1568,7 +1578,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not hasattr(self, "wave_stats_table"):
             return
         self.wave_stats_table.setHorizontalHeaderItem(
-            7, QtWidgets.QTableWidgetItem(f"{self.beat_split_spin.value():.0f}%RR (ms)")
+            10, QtWidgets.QTableWidgetItem(f"{self.beat_split_spin.value():.0f}%RR (ms)")
         )
         current_batch = self.batch_spin.value()
         batch_records = [
@@ -1603,10 +1613,13 @@ class MainWindow(QtWidgets.QMainWindow):
             values = [
                 signal_type,
                 self._fmt_time(stats["P"]),
+                self._fmt_voltage(stats["P_amp"]),
                 self._fmt_time(stats["PR"]),
                 self._fmt_time(stats["QRS"]),
+                self._fmt_voltage(stats["QRS_amp"]),
                 self._fmt_time(stats["ST"]),
                 self._fmt_time(stats["T"]),
+                self._fmt_voltage(stats["T_amp"]),
                 self._fmt_time(stats["RR"]),
                 self._fmt_time(stats["split_rr"]),
                 str(stats["count"]),
@@ -1636,6 +1649,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 float(record.width_ms)
                 for record in records
                 if keyword in record.annotation_type and record.width_ms is not None
+            ]
+
+        def amplitudes(keyword: str) -> list[float]:
+            return [
+                float(record.amplitude_mv)
+                for record in records
+                if keyword in record.annotation_type and record.amplitude_mv is not None
             ]
 
         if source == "整体":
@@ -1670,10 +1690,13 @@ class MainWindow(QtWidgets.QMainWindow):
         split_ratio = self.beat_split_spin.value() / 100.0
         return {
             "P": self._mean(widths("P波")),
+            "P_amp": self._mean(amplitudes("P波")),
             "PR": self._mean(pr_values),
             "QRS": self._mean(widths("QRS")),
+            "QRS_amp": self._mean(amplitudes("QRS")),
             "ST": self._mean(st_values),
             "T": self._mean(widths("T波")),
+            "T_amp": self._mean(amplitudes("T波")),
             "RR": self._mean(rr_values),
             "split_rr": self._mean(rr_values * split_ratio),
             "count": max(len(qrs_records), len(p_records), len(t_records), int(rr_values.size)),
@@ -1698,6 +1721,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 float(record.width_ms)
                 for record in records
                 if keyword in record.annotation_type and record.width_ms is not None
+            ]
+
+        def amplitudes(keyword: str) -> list[float]:
+            return [
+                float(record.amplitude_mv)
+                for record in records
+                if keyword in record.annotation_type and record.amplitude_mv is not None
             ]
 
         if source == "整体":
@@ -1732,10 +1762,13 @@ class MainWindow(QtWidgets.QMainWindow):
         split_ratio = self.beat_split_spin.value() / 100.0
         return {
             "P": self._mean(widths("P波")),
+            "P_amp": self._mean(amplitudes("P波")),
             "PR": self._mean(pr_values),
             "QRS": self._mean(widths("QRS")),
+            "QRS_amp": self._mean(amplitudes("QRS")),
             "ST": self._mean(st_values),
             "T": self._mean(widths("T波")),
+            "T_amp": self._mean(amplitudes("T波")),
             "RR": self._mean(rr_values),
             "split_rr": self._mean(rr_values * split_ratio),
             "count": max(len(qrs_records), len(p_records), len(t_records), int(rr_values.size)),
@@ -1761,6 +1794,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 float(record.width_ms)
                 for record in records
                 if keyword in record.annotation_type and record.width_ms is not None
+            ]
+
+        def amplitudes(keyword: str) -> list[float]:
+            return [
+                float(record.amplitude_mv)
+                for record in records
+                if keyword in record.annotation_type and record.amplitude_mv is not None
             ]
 
         if source == "整体":
@@ -1809,10 +1849,13 @@ class MainWindow(QtWidgets.QMainWindow):
         split_ratio = self.beat_split_spin.value() / 100.0
         return {
             "P": self._mean(widths("P波")),
+            "P_amp": self._mean(amplitudes("P波")),
             "PR": self._mean(pr_values),
             "QRS": self._mean(widths("QRS")),
+            "QRS_amp": self._mean(amplitudes("QRS")),
             "ST": self._mean(st_values),
             "T": self._mean(widths("T波")),
+            "T_amp": self._mean(amplitudes("T波")),
             "RR": self._mean(rr_values),
             "split_rr": self._mean(rr_values * split_ratio),
             "count": max(len(qrs_records), len(p_records), len(t_records), int(rr_values.size)),
@@ -2046,10 +2089,13 @@ class MainWindow(QtWidgets.QMainWindow):
             wave_df = pd.DataFrame(wave_rows)
             wave_df.rename(columns={
                 "P": "P (ms)",
+                "P_amp": "P amplitude (mV)",
                 "PR": "PR (ms)",
                 "QRS": "QRS (ms)",
+                "QRS_amp": "QRS amplitude (mV)",
                 "ST": "ST (ms)",
                 "T": "T (ms)",
+                "T_amp": "T amplitude (mV)",
                 "RR": "RR (ms)",
                 "split_rr": "split_rr (ms)",
             }, inplace=True)
@@ -2726,35 +2772,38 @@ class MainWindow(QtWidgets.QMainWindow):
             result_rows.append([
                 signal_type,
                 str(len(signal_rows)),
-                self._fmt_time(mean_or_nan(wave_values("p", "start_time"))),
-                self._fmt_time(mean_or_nan(wave_values("p", "end_time"))),
-                self._fmt_time(mean_or_nan(wave_values("qrs", "start_time"))),
-                self._fmt_time(mean_or_nan(wave_values("qrs", "end_time"))),
-                self._fmt_time(mean_or_nan(wave_values("t", "start_time"))),
-                self._fmt_time(mean_or_nan(wave_values("t", "end_time"))),
                 self._fmt_time(mean_or_nan(wave_values("p", "width_ms"))),
+                self._fmt_voltage(mean_or_nan(wave_values("p", "amplitude_mv"))),
                 self._fmt_time(mean_or_nan(pr_values)),
                 self._fmt_time(mean_or_nan(wave_values("qrs", "width_ms"))),
+                self._fmt_voltage(mean_or_nan(wave_values("qrs", "amplitude_mv"))),
                 self._fmt_time(mean_or_nan(st_values)),
                 self._fmt_time(mean_or_nan(wave_values("t", "width_ms"))),
+                self._fmt_voltage(mean_or_nan(wave_values("t", "amplitude_mv"))),
                 self._fmt_time(mean_or_nan(rr_values)),
             ])
 
         if combined_beats:
+            def combined_amplitudes(key: str) -> list[float]:
+                values: list[float] = []
+                for beat in combined_beats:
+                    for signal_data in beat.get("signals", {}).values():
+                        record = signal_data.get(key)
+                        if record is not None and record.amplitude_mv is not None:
+                            values.append(float(record.amplitude_mv))
+                return values
+
             result_rows.append([
                 "联合整体平均",
                 str(len(combined_beats)),
-                self._fmt_time(mean_or_nan([beat["p"]["start"] for beat in combined_beats if "p" in beat])),
-                self._fmt_time(mean_or_nan([beat["p"]["end"] for beat in combined_beats if "p" in beat])),
-                self._fmt_time(mean_or_nan([beat["qrs"]["start"] for beat in combined_beats if "qrs" in beat])),
-                self._fmt_time(mean_or_nan([beat["qrs"]["end"] for beat in combined_beats if "qrs" in beat])),
-                self._fmt_time(mean_or_nan([beat["t"]["start"] for beat in combined_beats if "t" in beat])),
-                self._fmt_time(mean_or_nan([beat["t"]["end"] for beat in combined_beats if "t" in beat])),
                 self._fmt_time(mean_or_nan([beat["p"]["width_ms"] for beat in combined_beats if "p" in beat])),
+                self._fmt_voltage(mean_or_nan(combined_amplitudes("p"))),
                 self._fmt_time(mean_or_nan([beat["pr_ms"] for beat in combined_beats if "pr_ms" in beat])),
                 self._fmt_time(mean_or_nan([beat["qrs"]["width_ms"] for beat in combined_beats if "qrs" in beat])),
+                self._fmt_voltage(mean_or_nan(combined_amplitudes("qrs"))),
                 self._fmt_time(mean_or_nan([beat["st_ms"] for beat in combined_beats if "st_ms" in beat])),
                 self._fmt_time(mean_or_nan([beat["t"]["width_ms"] for beat in combined_beats if "t" in beat])),
+                self._fmt_voltage(mean_or_nan(combined_amplitudes("t"))),
                 self._fmt_time(mean_or_nan([beat["rr_ms"] for beat in combined_beats if "rr_ms" in beat])),
             ])
 
