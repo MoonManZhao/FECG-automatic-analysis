@@ -62,6 +62,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._build_ui()
 
+    @staticmethod
+    def _make_table_columns_resizable(table: QtWidgets.QTableWidget) -> None:
+        header = table.horizontalHeader()
+        header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Interactive)
+        header.setStretchLastSection(False)
+        table.resizeColumnsToContents()
+        table.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
+
     def _build_ui(self) -> None:
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
@@ -130,7 +138,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.beat_split_spin.setSingleStep(1.0)
         self.beat_split_spin.setSuffix("%")
         self.beat_split_spin.setValue(58.0)
-        self.beat_split_spin.setToolTip("RR间期中心拍切分百分比")
+        self.beat_split_spin.setToolTip("RR间期中心搏切分百分比")
         self.p_pre_spin = QtWidgets.QDoubleSpinBox()
         self.p_pre_spin.setRange(0.5, 30.0)
         self.p_pre_spin.setSingleStep(0.5)
@@ -325,7 +333,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.hrv_table = QtWidgets.QTableWidget(0, 5)
         self.hrv_table.setHorizontalHeaderLabels(["导联", "R峰数量", "平均RR (ms)", "平均心率 (bpm)", "SDNN/RMSSD (ms)"])
-        self.hrv_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self._make_table_columns_resizable(self.hrv_table)
         hrv_container = QtWidgets.QWidget()
         hrv_layout = QtWidgets.QVBoxLayout(hrv_container)
         hrv_layout.setContentsMargins(0, 0, 0, 0)
@@ -333,24 +341,28 @@ class MainWindow(QtWidgets.QMainWindow):
         hrv_layout.addWidget(self.hrv_table, 1)
         side_splitter.addWidget(hrv_container)
 
-        self.wave_stats_table = QtWidgets.QTableWidget(0, 12)
+        self.wave_stats_table = QtWidgets.QTableWidget(0, 16)
         self.wave_stats_table.setHorizontalHeaderLabels(
             [
                 "导联",
                 "P (ms)",
                 "P幅度 (mV)",
                 "PR (ms)",
+                "PR最小 (ms)",
+                "PR最大 (ms)",
                 "QRS (ms)",
                 "QRS幅度 (mV)",
                 "ST (ms)",
+                "ST最小 (ms)",
+                "ST最大 (ms)",
                 "T (ms)",
                 "T幅度 (mV)",
                 "RR (ms)",
                 "58%RR (ms)",
-                "心拍数",
+                "心搏数",
             ]
         )
-        self.wave_stats_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self._make_table_columns_resizable(self.wave_stats_table)
         wave_container = QtWidgets.QWidget()
         wave_layout = QtWidgets.QVBoxLayout(wave_container)
         wave_layout.setContentsMargins(0, 0, 0, 0)
@@ -367,18 +379,29 @@ class MainWindow(QtWidgets.QMainWindow):
                 "对象",
                 "导联",
                 "类型",
-                "起点时间 (s)",
-                "终点时间 (s)",
-                "宽度 (ms)",
-                "基线时间 (s)",
-                "基线值 (mV)",
-                "峰值时间 (s)",
-                "峰值 (mV)",
-                "幅度 (mV)",
+                "起点(s)",
+                "终点(s)",
+                "宽度(ms)",
+                "基线时间(s)",
+                "基线值(mV)",
+                "峰值时间(s)",
+                "峰值(mV)",
+                "幅度(mV)",
                 "备注",
             ]
         )
-        self.annotation_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        annotation_header = self.annotation_table.horizontalHeader()
+        annotation_header.setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        annotation_header.setMinimumSectionSize(48)
+        self._make_table_columns_resizable(self.annotation_table)
+        self.annotation_table.verticalHeader().setDefaultSectionSize(24)
+        self.annotation_table.setWordWrap(False)
+        self.annotation_table.setAlternatingRowColors(True)
+        self.annotation_table.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.annotation_table.setStyleSheet(
+            "QHeaderView::section { padding: 4px 6px; font-weight: 600; }"
+            "QTableWidget { gridline-color: #d1d5db; alternate-background-color: #f9fafb; }"
+        )
         self.annotation_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.annotation_table.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         annotation_container = QtWidgets.QWidget()
@@ -388,23 +411,27 @@ class MainWindow(QtWidgets.QMainWindow):
         annotation_layout.addWidget(self.annotation_table, 1)
 
         # Joint analysis table
-        self.joint_table = QtWidgets.QTableWidget(0, 11)
+        self.joint_table = QtWidgets.QTableWidget(0, 15)
         self.joint_table.setHorizontalHeaderLabels(
             [
                 "来源",
-                "心拍",
+                "心搏",
                 "P(ms)",
                 "P幅度(mV)",
                 "PR(ms)",
+                "PR最小(ms)",
+                "PR最大(ms)",
                 "QRS(ms)",
                 "QRS幅度(mV)",
                 "ST(ms)",
+                "ST最小(ms)",
+                "ST最大(ms)",
                 "T(ms)",
                 "T幅度(mV)",
                 "RR(ms)",
             ]
         )
-        self.joint_table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self._make_table_columns_resizable(self.joint_table)
         joint_container = QtWidgets.QWidget()
         joint_layout = QtWidgets.QVBoxLayout(joint_container)
         joint_layout.setContentsMargins(0, 0, 0, 0)
@@ -1578,7 +1605,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not hasattr(self, "wave_stats_table"):
             return
         self.wave_stats_table.setHorizontalHeaderItem(
-            10, QtWidgets.QTableWidgetItem(f"{self.beat_split_spin.value():.0f}%RR (ms)")
+            14, QtWidgets.QTableWidgetItem(f"{self.beat_split_spin.value():.0f}%RR (ms)")
         )
         current_batch = self.batch_spin.value()
         batch_records = [
@@ -1615,9 +1642,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._fmt_time(stats["P"]),
                 self._fmt_voltage(stats["P_amp"]),
                 self._fmt_time(stats["PR"]),
+                self._fmt_time(stats["PR_min"]),
+                self._fmt_time(stats["PR_max"]),
                 self._fmt_time(stats["QRS"]),
                 self._fmt_voltage(stats["QRS_amp"]),
                 self._fmt_time(stats["ST"]),
+                self._fmt_time(stats["ST_min"]),
+                self._fmt_time(stats["ST_max"]),
                 self._fmt_time(stats["T"]),
                 self._fmt_voltage(stats["T_amp"]),
                 self._fmt_time(stats["RR"]),
@@ -1692,9 +1723,13 @@ class MainWindow(QtWidgets.QMainWindow):
             "P": self._mean(widths("P波")),
             "P_amp": self._mean(amplitudes("P波")),
             "PR": self._mean(pr_values),
+            "PR_min": self._min(pr_values),
+            "PR_max": self._max(pr_values),
             "QRS": self._mean(widths("QRS")),
             "QRS_amp": self._mean(amplitudes("QRS")),
             "ST": self._mean(st_values),
+            "ST_min": self._min(st_values),
+            "ST_max": self._max(st_values),
             "T": self._mean(widths("T波")),
             "T_amp": self._mean(amplitudes("T波")),
             "RR": self._mean(rr_values),
@@ -1764,9 +1799,13 @@ class MainWindow(QtWidgets.QMainWindow):
             "P": self._mean(widths("P波")),
             "P_amp": self._mean(amplitudes("P波")),
             "PR": self._mean(pr_values),
+            "PR_min": self._min(pr_values),
+            "PR_max": self._max(pr_values),
             "QRS": self._mean(widths("QRS")),
             "QRS_amp": self._mean(amplitudes("QRS")),
             "ST": self._mean(st_values),
+            "ST_min": self._min(st_values),
+            "ST_max": self._max(st_values),
             "T": self._mean(widths("T波")),
             "T_amp": self._mean(amplitudes("T波")),
             "RR": self._mean(rr_values),
@@ -1851,9 +1890,13 @@ class MainWindow(QtWidgets.QMainWindow):
             "P": self._mean(widths("P波")),
             "P_amp": self._mean(amplitudes("P波")),
             "PR": self._mean(pr_values),
+            "PR_min": self._min(pr_values),
+            "PR_max": self._max(pr_values),
             "QRS": self._mean(widths("QRS")),
             "QRS_amp": self._mean(amplitudes("QRS")),
             "ST": self._mean(st_values),
+            "ST_min": self._min(st_values),
+            "ST_max": self._max(st_values),
             "T": self._mean(widths("T波")),
             "T_amp": self._mean(amplitudes("T波")),
             "RR": self._mean(rr_values),
@@ -2091,16 +2134,20 @@ class MainWindow(QtWidgets.QMainWindow):
                 "P": "P (ms)",
                 "P_amp": "P amplitude (mV)",
                 "PR": "PR (ms)",
+                "PR_min": "PR min (ms)",
+                "PR_max": "PR max (ms)",
                 "QRS": "QRS (ms)",
                 "QRS_amp": "QRS amplitude (mV)",
                 "ST": "ST (ms)",
+                "ST_min": "ST min (ms)",
+                "ST_max": "ST max (ms)",
                 "T": "T (ms)",
                 "T_amp": "T amplitude (mV)",
                 "RR": "RR (ms)",
                 "split_rr": "split_rr (ms)",
             }, inplace=True)
             wave_df.to_csv(dir_path / "wave_stats.csv", index=False, encoding="utf-8-sig")
-        # 4. 导出所有 batch 的逐心拍详情
+        # 4. 导出所有 batch 的逐心搏详情
         beat_rows: list[dict] = []
         for batch in range(self.dataset.batch_count):
             sample = self.dataset.data[batch]
@@ -2413,6 +2460,18 @@ class MainWindow(QtWidgets.QMainWindow):
         arr = arr[np.isfinite(arr)]
         return float(np.mean(arr)) if arr.size > 0 else float("nan")
 
+    @staticmethod
+    def _min(values) -> float:
+        arr = np.asarray(values, dtype=float)
+        arr = arr[np.isfinite(arr)]
+        return float(np.min(arr)) if arr.size > 0 else float("nan")
+
+    @staticmethod
+    def _max(values) -> float:
+        arr = np.asarray(values, dtype=float)
+        arr = arr[np.isfinite(arr)]
+        return float(np.max(arr)) if arr.size > 0 else float("nan")
+
     def _prefer_manual_wave_records(
         self,
         signal_type: str,
@@ -2691,7 +2750,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 aligned_beats.append(beat_peaks)
 
         if len(aligned_beats) < 2:
-            self.status_label.setText(f"联合分析：对齐心拍不足（{len(aligned_beats)}个），请调整容差。")
+            self.status_label.setText(f"联合分析：对齐心搏不足（{len(aligned_beats)}个），请调整容差。")
             return
 
         batch_records = [r for r in self.annotations.records if r.batch_index == batch]
@@ -2720,7 +2779,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Draw joint analysis on plot
         self._draw_joint_on_plot()
 
-        self.status_label.setText(f"联合分析完成：{len(aligned_beats)}个对齐心拍，{len(selected_signals)}个通道 ({', '.join(selected_signals)})")
+        self.status_label.setText(f"联合分析完成：{len(aligned_beats)}个对齐心搏，{len(selected_signals)}个通道 ({', '.join(selected_signals)})")
 
     def _refresh_joint_table(self) -> None:
         """Refresh the joint analysis table with average results."""
@@ -2775,9 +2834,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._fmt_time(mean_or_nan(wave_values("p", "width_ms"))),
                 self._fmt_voltage(mean_or_nan(wave_values("p", "amplitude_mv"))),
                 self._fmt_time(mean_or_nan(pr_values)),
+                self._fmt_time(self._min(pr_values)),
+                self._fmt_time(self._max(pr_values)),
                 self._fmt_time(mean_or_nan(wave_values("qrs", "width_ms"))),
                 self._fmt_voltage(mean_or_nan(wave_values("qrs", "amplitude_mv"))),
                 self._fmt_time(mean_or_nan(st_values)),
+                self._fmt_time(self._min(st_values)),
+                self._fmt_time(self._max(st_values)),
                 self._fmt_time(mean_or_nan(wave_values("t", "width_ms"))),
                 self._fmt_voltage(mean_or_nan(wave_values("t", "amplitude_mv"))),
                 self._fmt_time(mean_or_nan(rr_values)),
@@ -2799,9 +2862,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._fmt_time(mean_or_nan([beat["p"]["width_ms"] for beat in combined_beats if "p" in beat])),
                 self._fmt_voltage(mean_or_nan(combined_amplitudes("p"))),
                 self._fmt_time(mean_or_nan([beat["pr_ms"] for beat in combined_beats if "pr_ms" in beat])),
+                self._fmt_time(self._min([beat["pr_ms"] for beat in combined_beats if "pr_ms" in beat])),
+                self._fmt_time(self._max([beat["pr_ms"] for beat in combined_beats if "pr_ms" in beat])),
                 self._fmt_time(mean_or_nan([beat["qrs"]["width_ms"] for beat in combined_beats if "qrs" in beat])),
                 self._fmt_voltage(mean_or_nan(combined_amplitudes("qrs"))),
                 self._fmt_time(mean_or_nan([beat["st_ms"] for beat in combined_beats if "st_ms" in beat])),
+                self._fmt_time(self._min([beat["st_ms"] for beat in combined_beats if "st_ms" in beat])),
+                self._fmt_time(self._max([beat["st_ms"] for beat in combined_beats if "st_ms" in beat])),
                 self._fmt_time(mean_or_nan([beat["t"]["width_ms"] for beat in combined_beats if "t" in beat])),
                 self._fmt_voltage(mean_or_nan(combined_amplitudes("t"))),
                 self._fmt_time(mean_or_nan([beat["rr_ms"] for beat in combined_beats if "rr_ms" in beat])),
